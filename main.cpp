@@ -2,9 +2,9 @@
 #include <fstream>
 #include <string>
 #include "affine_cipher.h"
-// Позже сокомандники добавят сюда свои заголовочные файлы:
+// добавите свои заголовочные файлы
 // #include "rsa_cipher.h"
-// #include "shamir_cipher.h"
+// #include "shamir_cipher.h" типа
 
 using namespace std;
 
