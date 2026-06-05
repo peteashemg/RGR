@@ -1,113 +1,53 @@
-#include <iostream>
-#include <string>
 #include "sencipher.h"
-
 using namespace std;
 
-namespace Crypto {
-
-    // Функция для поиска модульной инверсии (a^-1 mod m)
-    // Используем только базовый int, как требуют условия лабы
-    int findInverse(int a, int m) {
-        a = a % m;
-        for (int x = 1; x < m; x++) {
-            if ((a * x) % m == 1) {
-                return x; // Нашли мультипликативно обратное число
-            }
+namespace SenCipher{
+    int gcd(int a, int b){
+        while (b != 0){
+            int temp = b;
+            b = a % b;
+            a = temp;
         }
-        return -1; // Если решения нет
+        return a;
     }
 
-    // Функция аффинного шифрования
-    string encryptAffine(string text, int a, int b) {
-        string result = "";
-        cout << "\n--- Процесс шифрования по шагам ---" << endl;
-
-        for (int i = 0; i < text.length(); i++) {
-            char c = text[i];
-
-            // Проверка на заглавные английские буквы вручную (вместо isupper)
-            if (c >= 'A' && c <= 'Z') {
-                int p = c - 'A'; // Индекс от 0 до 25
-                int cipherIdx = (a * p + b) % 26;
-                char cipherChar = cipherIdx + 'A';
-                
-                cout << "Буква: " << c << " (индекс " << p << ") -> (" 
-                     << a << " * " << p << " + " << b << ") mod 26 = " 
-                     << cipherIdx << " -> " << cipherChar << endl;
-                     
-                result += cipherChar;
+    int modInverse(int a, int mod){
+        a %= mod;
+        for (int x = 1; x < mod; x++){
+            if ((a * x) % mod == 1){
+                return x;
             }
-            // Проверка на строчные английские буквы вручную (вместо islower)
-            else if (c >= 'a' && c <= 'z') {
-                int p = c - 'a'; // Индекс от 0 до 25
-                int cipherIdx = (a * p + b) % 26;
-                char cipherChar = cipherIdx + 'a';
-                
-                cout << "Буква: " << c << " (индекс " << p << ") -> (" 
-                     << a << " * " << p << " + " << b << ") mod 26 = " 
-                     << cipherIdx << " -> " << cipherChar << endl;
-                     
-                result += cipherChar;
-            }
-            // Все остальные символы (пробелы, знаки препинания) пропускаем без изменений
-            else {
-                result += c;
-            }
+        }
+        return -1;
+    }
+    vector<unsigned char> encryptAffine(const vector<unsigned char>& data, int a, int b){
+        vector<unsigned char> result;
+        result.reserve(data.size());
+        for (unsigned char byte : data){
+            int encrypted = (a * static_cast<int>(byte) + b) % 256;
+            result.push_back(static_cast<unsigned char>(encrypted)
+            );
         }
         return result;
     }
-
-    // Функция аффинного дешифрования
-    string decryptAffine(string text, int a, int b) {
-        string result = "";
-        int aInverse = findInverse(a, 26);
-
-        if (aInverse == -1) {
-            cout << "[Ошибка] Число 'a' не взаимно простое с 26! Дешифрование невозможно." << endl;
-            return text;
+    vector<unsigned char> decryptAffine(const vector<unsigned char>& data, int a, int b){
+        vector<unsigned char> result;
+        result.reserve(data.size());
+        int inverseA = modInverse(a, 256);
+        if (inverseA == -1){
+            return {};
         }
-
-        cout << "\n--- Процесс дешифрования по шагам (a^-1 mod 26 = " << aInverse << ") ---" << endl;
-
-        for (int i = 0; i < text.length(); i++) {
-            char c = text[i];
-
-            // Обработка заглавных букв вручную
-            if (c >= 'A' && c <= 'Z') {
-                int cipherIdx = c - 'A';
-                // В C++ остаток от деления отрицательного числа может быть отрицательным,
-                // поэтому аккуратно считаем формулу и нормализуем значение
-                int p = (aInverse * (cipherIdx - b)) % 26;
-                if (p < 0) {
-                    p += 26;
-                }
-                char plainChar = p + 'A';
-                
-                cout << "Шифр-буква: " << c << " (индекс " << cipherIdx << ") -> " 
-                     << aInverse << " * (" << cipherIdx << " - " << b << ") mod 26 = " 
-                     << p << " -> " << plainChar << endl;
-                     
-                result += plainChar;
+        for (unsigned char byte : data){
+            int value =
+                inverseA *
+                (static_cast<int>(byte) - b);
+            value %= 256;
+            if (value < 0){
+                value += 256;
             }
-            // Обработка строчных букв вручную
-            else if (c >= 'a' && c <= 'z') {
-                int cipherIdx = c - 'a';
-                int p = (aInverse * (cipherIdx - b)) % 26;
-                if (p < 0) {
-                    p += 26;
-                }
-                char plainChar = p + 'a';
-                
-                cout << "Шифр-буква: " << c << " (индекс " << cipherIdx << ") -> " 
-                     << aInverse << " * (" << cipherIdx << " - " << b << ") mod 26 = " 
-                     << p << " -> " << plainChar << endl;
-                     
-                result += plainChar;
-            }
-            else {
-                result += c;
-            }
+            result.push_back(
+                static_cast<unsigned char>(value)
+            );
         }
         return result;
     }
