@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <limits>
+#include <cstdio>
 #include "sencipher.h"
 #include "hillcipher.h"
 #include "keygenerator.h"
@@ -44,6 +45,15 @@ void writeFile(const string& fileName, const vector<unsigned char>& data){
 }
 vector<unsigned char> stringToBytes(const string& text){
     return vector<unsigned char>(text.begin(), text.end());
+}
+vector<unsigned char> hexToBytes(const string& hexString){
+    vector<unsigned char> result;
+    for (size_t i = 0; i < hexString.length(); i += 2){
+        string part = hexString.substr(i, 2);
+        result.push_back(static_cast<unsigned char>(stoi(part, nullptr, 16)));
+    }
+
+    return result;
 }
 string bytesToString(const vector<unsigned char>& data){
     return string(data.begin(),data.end());
@@ -183,26 +193,50 @@ void textMenu(){
         return;
     }
     int mode;
-    cout << "\n1. Шифрование\n" << "2. Дешифрование\n" << "\n0. Назад\n\n";
+    cout << "\n1. Шифрование\n";
+    cout << "2. Дешифрование\n";
+    cout << "\n0. Назад\n\n";
     cout << "Ваш выбор: ";
     cin >> mode;
     if (mode == 0){
         return;
     }
-    cin.ignore();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     string text;
-    cout << "\nВведите текст:\n";
-    getline(cin,text);
-    vector<unsigned char> data = stringToBytes(text);
-    vector<unsigned char> result;
-    if (algorithm == 1){
-        result = processAffine(data, mode == 1);
+    if (mode == 1){
+        cout << "\nВведите текст:\n";
     }
     else{
-        result = processHill(data, mode == 1);
+        cout << "\nВведите HEX:\n";
     }
-    cout << "\nРезультат:\n";
-    cout << bytesToString(result) << endl;
+    getline(cin, text);
+    vector<unsigned char> data;
+    if (mode == 1){
+        data = stringToBytes(text);
+    }
+    else{
+        data = hexToBytes(text);
+    }
+    vector<unsigned char> result;
+    if (algorithm == 1){
+        result = processAffine(data,mode == 1);
+    }
+    else{
+        result = processHill(data,mode == 1);
+    }
+
+    if (mode == 1){
+        cout << "\nРезультат (HEX):\n";
+        for (unsigned char byte : result){
+            printf("%02X", byte);
+        }
+        cout << endl;
+    }
+    else{
+        cout << "\nРезультат:\n";
+        cout << bytesToString(result) << endl;
+    }
+
     waitForEnter();
 }
 
@@ -245,8 +279,7 @@ int main(){
         waitForEnter();
     }
     catch (...){
-        printError("Неизвестная ошибка."
-        );
+        printError("Неизвестная ошибка.");
         waitForEnter();
     }
     return 0;

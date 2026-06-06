@@ -6,44 +6,29 @@ namespace SenCipher{
     vector<vector<int>> inverseMatrix2x2(const vector<vector<int>>& matrix){
         int det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
         det %= 256;
-
-        if (det < 0)
-        {
+        if (det < 0){
             det += 256;
         }
-
-        int detInverse =
-            modInverse(det, 256);
-
-        if (detInverse == -1)
-        {
+        int detInverse = modInverse(det, 256);
+        if (detInverse == -1){
             return {};
         }
-
-        vector<vector<int>> result(
-            2,
-            vector<int>(2)
+        vector<vector<int>> result(2, vector<int>(2)
         );
-
         result[0][0] = matrix[1][1];
         result[0][1] = -matrix[0][1];
         result[1][0] = -matrix[1][0];
         result[1][1] = matrix[0][0];
-
-        for (auto& row : result)
-        {
-            for (auto& value : row)
-            {
+        for (auto& row : result){
+            for (auto& value : row){
                 value *= detInverse;
                 value %= 256;
 
-                if (value < 0)
-                {
+                if (value < 0){
                     value += 256;
                 }
             }
         }
-
         return result;
     }
 
