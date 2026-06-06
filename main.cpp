@@ -62,68 +62,192 @@ int chooseAlgorithm(){
     cin >> choice;
     return choice;
 }
-void keyGeneratorMenu()
-{
+void keyGeneratorMenu(){
     int choice;
-
     cout << "\nГенератор ключей\n\n";
-
     cout << "1. Аффинный шифр\n";
     cout << "2. Шифр Хилла\n";
-
     cout << "\n0. Назад\n";
-
     cout << "Ваш выбор: ";
-
     cin >> choice;
-// поправить в дефолтный вид
-    /* switch (choice) 
-    {
-        case 1:
-        {
-            AffineKey key =
-                generateAffineKey();
-
+    
+    switch (choice){
+        case 1:{
+            AffineKey key = generateAffineKey();
             cout << "\nСгенерированный ключ:\n";
-
-            cout
-                << "a = "
-                << key.a
-                << endl;
-
-            cout
-                << "b = "
-                << key.b
-                << endl;
-
+            cout << "a = " << key.a << endl;
+            cout << "b = " << key.b << endl;
             break;
         }
 
-        case 2:
-        {
-            auto key =
-                generateHillKey();
-
+        case 2:{
+            auto key = generateHillKey();
             cout << "\nМатрица:\n";
-
-            for (const auto& row : key)
-            {
-                for (int value : row)
-                {
-                    cout
-                        << value
-                        << '\t';
+            for (const auto& row : key){
+                for (int value : row){
+                    cout << value << '\t';
                 }
-
                 cout << endl;
             }
-
             break;
         }
-
-        default:
-            break;
+        default:break;
     }
 
     waitForEnter();
-} */
+}
+vector<unsigned char> processAffine(const vector<unsigned char>& data, bool encryptMode){
+    int a;int b;
+    cout << "\nВведите ключ a: ";
+    cin >> a;
+    cout << "Введите ключ b: ";
+    cin >> b;
+    if (gcd(a, 256) != 1){
+        throw runtime_error("Ключ a должен быть взаимно простым с 256.");
+    }
+
+    if (encryptMode){
+        return encryptAffine(data,a, b);
+    }
+
+    return decryptAffine(data, a, b);
+}
+vector<unsigned char> processHill(const vector<unsigned char>& data, bool encryptMode){
+    vector<vector<int>> key(2, vector<int>(2));
+    cout << "\nВведите матрицу 2x2:\n";
+    for (auto& row : key){
+        for (auto& value : row){
+            cin >> value;
+        }
+    }
+    int determinant = key[0][0] * key[1][1] - key[0][1] * key[1][0];
+    determinant %= 256;
+    if (determinant < 0){
+        determinant += 256;
+    }
+    if (gcd(determinant, 256) != 1){
+        throw runtime_error("Матрица не имеет обратной по mod 256.");
+    }
+    if (encryptMode){
+        return encryptHill(data, key);
+    }
+    return decryptHill(data, key);
+}
+void fileMenu(){
+    int algorithm = chooseAlgorithm();
+    if (algorithm == 0){
+        return;
+    }
+    if (algorithm >= 3){
+        printError("Алгоритм пока не реализован.");
+        waitForEnter();
+        return;
+    }
+    int mode;
+    cout << "\n1. Шифрование\n" << "2. Дешифрование\n" << "\n0. Назад\n\n";
+    cout << "Ваш выбор: ";
+    cin >> mode;
+    if (mode == 0){
+        return;
+    }
+    string inputFile;
+    cout<< "\nВведите имя файла:\n";
+    cin >> inputFile;
+    vector<unsigned char> data = readFile(inputFile);
+    vector<unsigned char> result;
+    if (algorithm == 1){
+        result = processAffine(data,mode == 1);
+    }
+    else{
+        result = processHill(data, mode == 1);
+    }
+    string outputFile;
+    if (mode == 1){
+        outputFile = "encrypted_" + inputFile;
+    }
+    else{
+        outputFile = "decrypted_" + inputFile;
+    }
+    writeFile(outputFile,result);
+    printSuccess("Файл сохранён как:\n" + outputFile);
+    waitForEnter();
+}
+void textMenu(){
+    int algorithm = chooseAlgorithm();
+    if (algorithm == 0){
+        return;
+    }
+    if (algorithm >= 3){
+        printError("Алгоритм пока не реализован.");
+        waitForEnter();
+        return;
+    }
+    int mode;
+    cout << "\n1. Шифрование\n" << "2. Дешифрование\n" << "\n0. Назад\n\n";
+    cout << "Ваш выбор: ";
+    cin >> mode;
+    if (mode == 0){
+        return;
+    }
+    cin.ignore();
+    string text;
+    cout << "\nВведите текст:\n";
+    getline(cin,text);
+    vector<unsigned char> data = stringToBytes(text);
+    vector<unsigned char> result;
+    if (algorithm == 1){
+        result = processAffine(data, mode == 1);
+    }
+    else{
+        result = processHill(data, mode == 1);
+    }
+    cout << "\nРезультат:\n";
+    cout << bytesToString(result) << endl;
+    waitForEnter();
+}
+
+int main(){
+    try{
+        while (true){
+            int choice;
+            cout << "\n=======================\n";
+            cout << "Система шифрования данных\n";
+            cout << "=========================\n\n";
+            cout << "1. Работа с текстом\n";
+            cout << "2. Работа с файлами\n";
+            cout << "3. Генератор ключей\n";
+            cout << "\n0. Выход\n\n";
+            cout << "Ваш выбор: ";
+            cin >> choice;
+
+            switch (choice){
+                case 1:
+                    textMenu();
+                    break;
+                case 2:
+                    fileMenu();
+                    break;
+                case 3:
+                    keyGeneratorMenu();
+                    break;
+                case 0:
+                    cout << "\nЗавершение программы...\n";
+                    return 0;
+                default:
+                    printError("Некорректный выбор.");
+                    waitForEnter();
+                    break;
+            }
+        }
+    }
+    catch (const exception& ex){
+        printError(ex.what());
+        waitForEnter();
+    }
+    catch (...){
+        printError("Неизвестная ошибка."
+        );
+        waitForEnter();
+    }
+    return 0;
+}
