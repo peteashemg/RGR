@@ -1,11 +1,33 @@
 #include <iostream>
 #include <string>
+#include <windows.h>
 #include "cipherAPI.h"
 
 using namespace std;
 
+void processCipher(const string& dllName) { // движок загрузки библиотек 
+    HMODULE hDll = LoadLibraryA(dllName.c_str());
+    if (!hDll) {
+        cout << "[Ошибка] Не удалось загрузить библиотеку: " << dllName << endl;
+        return;
+    }
+
+    CreateCipherFunc createCipher = (CreateCipherFunc)GetProcAddress(hDll, "createCipher");
+    ReleaseCipherFunc releaseCipher = (ReleaseCipherFunc)GetProcAddress(hDll, "releaseCipher");
+
+    if (!createCipher || !releaseCipher) {
+        cout << "Ошибка. Неверная структура DLL библиотеки" << endl;
+        FreeLibrary(hDll);
+        return;
+    }
+
+    cout << "Успех. Библиотека " << dllName << " успешно найдена и загружена" << endl;
+    
+    FreeLibrary(hDll); // Освобождаем ресурсы
+}
+
 void showMenu() {
-    cout << "\nРасчетно-графическая работа" << endl;
+    cout << "\n Расчетно-графическая работа" << endl;
     cout << "1. Шифр Гронсфельда (Gronsfeld Cipher) [DLL]" << endl;
     cout << "2. Шифр Зигзаг (Rail Fence) [DLL]" << endl;
     cout << "0. Выход" << endl;
@@ -27,10 +49,10 @@ int main() {
 
         switch (choice) {
             case 1:
-                cout << "\n[Инфо] Выбран шифр Гронсфельда. " << endl; //Логика будет добавлена позже.
+                processCipher("gronsfeld.dll");
                 break;
             case 2:
-                cout << "\n[Инфо] Выбран шифр Rail Fence. " << endl; // Логика будет добавлена позжеф.
+                processCipher("railfence.dll");
                 break;
             case 0:
                 cout << "Завершение работы программы" << endl;
