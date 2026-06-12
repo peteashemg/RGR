@@ -1,29 +1,33 @@
 #include <iostream>
 #include <string>
+#include <vector>
 #include <windows.h>
 #include "cipherAPI.h"
 
 using namespace std;
 
+// функция для работы с шифром через динамическую библиотеку DLL
 void processCipher(const string& dllName) {
     HMODULE hDll = LoadLibraryA(dllName.c_str());
     if (!hDll) {
-        cout << "[Ошибка] Не удалось загрузить библиотеку: " << dllName << endl;
+        cout << "Ошибка. Не удалось загрузить библиотеку: " << dllName << endl;
         return;
     }
 
+//поиск функций создания и удаления объекта класса в DLL
     CreateCipherFunc createCipher = (CreateCipherFunc)GetProcAddress(hDll, "createCipher");
     ReleaseCipherFunc releaseCipher = (ReleaseCipherFunc)GetProcAddress(hDll, "releaseCipher");
 
     if (!createCipher || !releaseCipher) {
-        cout << "[Ошибка] Неверная структура DLL библиотеки!" << endl;
+        cout << "Ошибка. Неверная структура DLL библиотеки" << endl;
         FreeLibrary(hDll);
         return;
     }
 
+//создание объекта шифра через интерфейс CipherAPI
     CipherAPI* cipher = createCipher();
     
-    cin.ignore();
+    cin.ignore(); //ввод данных пользователем
     cout << "Введите текст для шифрования: ";
     string text;
     getline(cin, text);
@@ -32,20 +36,27 @@ void processCipher(const string& dllName) {
     string key;
     getline(cin, key);
 
-    vector<unsigned char> data(text.begin(), text.end()); //приведение к вектору байт
+    vector<unsigned char> data(text.begin(), text.end()); //конвертируем текст в вектор байт
 
-    vector<unsigned char> encrypted = cipher->encrypt(data, key); // вызов функций шифра
-    string encStr(encrypted.begin(), encrypted.end());
-    cout << "Зашифрованный текст: " << encStr << endl;
+    try {
+        //шифрование
+        vector<unsigned char> encrypted = cipher->encrypt(data, key);
+        string encStr(encrypted.begin(), encrypted.end());
+        cout << "Зашифрованный текст: " << encStr << endl;
 
-    vector<unsigned char> decrypted = cipher->decrypt(encrypted, key);
-    string decStr(decrypted.begin(), decrypted.end());
-    cout << "Расшифрованный текст: " << decStr << endl;
+        //расшифрование
+        vector<unsigned char> decrypted = cipher->decrypt(encrypted, key);
+        string decStr(decrypted.begin(), decrypted.end());
+        cout << "Расшифрованный текст: " << decStr << endl;
+    }
+    catch (const exception& e) {
+        cout << "Ошибка выполнения алгоритма: " << e.what() << endl;
+    }
 
+    //очистка памяти
     releaseCipher(cipher);
     FreeLibrary(hDll);
 }
-
 
 void showMenu() {
     cout << "\n Расчетно-графическая работа" << endl;
@@ -62,7 +73,7 @@ int main() {
     while (choice != 0) {
         showMenu();
         if (!(cin >> choice)) {
-            cout << "Ошибка. Введите число" << endl;
+            cout << "Ошибка. Введите число." << endl;
             cin.clear();
             cin.ignore(10000, '\n');
             continue;
@@ -76,10 +87,10 @@ int main() {
                 processCipher("railfence.dll");
                 break;
             case 0:
-                cout << "Завершение работы программы" << endl;
+                cout << "Завершение работы программы." << endl;
                 break;
             default:
-                cout << "Неверный выбор. Попробуйте снова" << endl;
+                cout << "Неверный выбор. Попробуйте снова." << endl;
         }
     }
     return 0;
