@@ -1,6 +1,9 @@
+#define byte WIN_BYTE_HACK //Хак для предотвращения конфликта типов байт на винде и плюсах
+#include <windows.h>
+#undef byte
+
 #include "cipherRailFence.h"
 #include <stdexcept>
-#include <windows.h>
 
 std::wstring bytesToWstring(const std::vector<unsigned char>& data) {
     if (data.empty()) return L"";
