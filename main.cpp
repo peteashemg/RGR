@@ -5,7 +5,7 @@
 
 using namespace std;
 
-void processCipher(const string& dllName) { // движок загрузки библиотек 
+void processCipher(const string& dllName) {
     HMODULE hDll = LoadLibraryA(dllName.c_str());
     if (!hDll) {
         cout << "[Ошибка] Не удалось загрузить библиотеку: " << dllName << endl;
@@ -16,15 +16,36 @@ void processCipher(const string& dllName) { // движок загрузки б�
     ReleaseCipherFunc releaseCipher = (ReleaseCipherFunc)GetProcAddress(hDll, "releaseCipher");
 
     if (!createCipher || !releaseCipher) {
-        cout << "Ошибка. Неверная структура DLL библиотеки" << endl;
+        cout << "[Ошибка] Неверная структура DLL библиотеки!" << endl;
         FreeLibrary(hDll);
         return;
     }
 
-    cout << "Успех. Библиотека " << dllName << " успешно найдена и загружена" << endl;
+    CipherAPI* cipher = createCipher();
     
-    FreeLibrary(hDll); // Освобождаем ресурсы
+    cin.ignore();
+    cout << "Введите текст для шифрования: ";
+    string text;
+    getline(cin, text);
+
+    cout << "Введите ключ: ";
+    string key;
+    getline(cin, key);
+
+    vector<unsigned char> data(text.begin(), text.end()); //приведение к вектору байт
+
+    vector<unsigned char> encrypted = cipher->encrypt(data, key); // вызов функций шифра
+    string encStr(encrypted.begin(), encrypted.end());
+    cout << "Зашифрованный текст: " << encStr << endl;
+
+    vector<unsigned char> decrypted = cipher->decrypt(encrypted, key);
+    string decStr(decrypted.begin(), decrypted.end());
+    cout << "Расшифрованный текст: " << decStr << endl;
+
+    releaseCipher(cipher);
+    FreeLibrary(hDll);
 }
+
 
 void showMenu() {
     cout << "\n Расчетно-графическая работа" << endl;
