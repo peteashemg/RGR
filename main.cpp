@@ -7,6 +7,7 @@
 #include "sencipher.h"
 #include "hillcipher.h"
 #include "keygenerator.h"
+#include "publickeycipher.h"
 using namespace std;
 using namespace SenCipher;
 
@@ -65,8 +66,8 @@ int chooseAlgorithm(){
     cout << "2. Шифр Хилла\n";
     cout << "3. RSA (в разработке)\n";
     cout << "4. Диффи-Хеллман (в разработке)\n";
-    cout << "5. Шифр Шамира (в разработке)\n";
-    cout << "6. Шифр Эль-Гамаля (в разработке)\n";
+    cout << "5. Шифр Шамира\n";
+    cout << "6. Шифр Эль-Гамаля\n";
     cout << "\n0. Назад\n\n";
     cout << "Ваш выбор: ";
     cin >> choice;
@@ -77,6 +78,8 @@ void keyGeneratorMenu(){
     cout << "\nГенератор ключей\n\n";
     cout << "1. Аффинный шифр\n";
     cout << "2. Шифр Хилла\n";
+    cout << "3. Шифр Шамира\n";
+    cout << "4. Шифр Эль-Гамаля\n";
     cout << "\n0. Назад\n";
     cout << "Ваш выбор: ";
     cin >> choice;
@@ -99,6 +102,29 @@ void keyGeneratorMenu(){
                 }
                 cout << endl;
             }
+            break;
+        }
+        case 3:{
+            int p;
+            cout << "\nВведите простое p больше 255 (например 257): ";
+            cin >> p;
+            ShamirKeys keys = generateShamirKeys(p);
+            cout << "\nКлючи Шамира:\n";
+            cout << "p = " << keys.p << endl;
+            cout << "Алиса: cA = " << keys.alice.c << ", dA = " << keys.alice.d << endl;
+            cout << "Боб:   cB = " << keys.bob.c << ", dB = " << keys.bob.d << endl;
+            break;
+        }
+        case 4:{
+            int p; int g;
+            cout << "\nВведите простое p больше 255 (например 257): ";
+            cin >> p;
+            cout << "Введите g от 2 до p - 1 (например 3): ";
+            cin >> g;
+            ElGamalKey key = generateElGamalKey(p, g);
+            cout << "\nКлючи Эль-Гамаля:\n";
+            cout << "Открытый ключ: p = " << key.p << ", g = " << key.g << ", y = " << key.y << endl;
+            cout << "Закрытый ключ: x = " << key.x << endl;
             break;
         }
         default:break;
@@ -143,12 +169,57 @@ vector<unsigned char> processHill(const vector<unsigned char>& data, bool encryp
     }
     return decryptHill(data, key);
 }
+
+vector<unsigned char> processShamir(const vector<unsigned char>& data, bool encryptMode){
+    int p;
+    cout << "\nВведите простое p больше 255: ";
+    cin >> p;
+
+    if (encryptMode){
+        int ca; int da; int cb;
+        cout << "Введите ключ Алисы cA: ";
+        cin >> ca;
+        cout << "Введите обратный ключ Алисы dA: ";
+        cin >> da;
+        cout << "Введите ключ Боба cB: ";
+        cin >> cb;
+
+        return encryptShamir(data, p, ca, da, cb);
+    }
+
+    int db;
+    cout << "Введите обратный ключ Боба dB: ";
+    cin >> db;
+    return decryptShamir(data, p, db);
+}
+
+vector<unsigned char> processElGamal(const vector<unsigned char>& data, bool encryptMode){
+    int p;
+    cout << "\nВведите простое p больше 255: ";
+    cin >> p;
+
+    if (encryptMode){
+        int g; int y;
+        cout << "Введите основание g: ";
+        cin >> g;
+        cout << "Введите открытый ключ y: ";
+        cin >> y;
+
+        return encryptElGamal(data, p, g, y);
+    }
+
+    int x;
+    cout << "Введите закрытый ключ x: ";
+    cin >> x;
+    return decryptElGamal(data, p, x);
+}
+
 void fileMenu(){
     int algorithm = chooseAlgorithm();
     if (algorithm == 0){
         return;
     }
-    if (algorithm >= 3){
+    if (algorithm == 3 || algorithm == 4){
         printError("Алгоритм пока не реализован.");
         waitForEnter();
         return;
@@ -168,8 +239,14 @@ void fileMenu(){
     if (algorithm == 1){
         result = processAffine(data,mode == 1);
     }
-    else{
+    else if (algorithm == 2){
         result = processHill(data, mode == 1);
+    }
+    else if (algorithm == 5){
+        result = processShamir(data, mode == 1);
+    }
+    else{
+        result = processElGamal(data, mode == 1);
     }
     string outputFile;
     if (mode == 1){
@@ -187,7 +264,7 @@ void textMenu(){
     if (algorithm == 0){
         return;
     }
-    if (algorithm >= 3){
+    if (algorithm == 3 || algorithm == 4){
         printError("Алгоритм пока не реализован.");
         waitForEnter();
         return;
@@ -221,8 +298,14 @@ void textMenu(){
     if (algorithm == 1){
         result = processAffine(data,mode == 1);
     }
-    else{
+    else if (algorithm == 2){
         result = processHill(data,mode == 1);
+    }
+    else if (algorithm == 5){
+        result = processShamir(data,mode == 1);
+    }
+    else{
+        result = processElGamal(data,mode == 1);
     }
 
     if (mode == 1){
