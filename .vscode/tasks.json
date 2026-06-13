@@ -8,9 +8,13 @@
                 "-fcolor-diagnostics",
                 "-fansi-escape-codes",
                 "-g",
-                "${file}",
+                "${fileDirname}/main.cpp",
+                "${fileDirname}/sencipher.cpp",
+                "${fileDirname}/hillcipher.cpp",
+                "${fileDirname}/keygenerator.cpp",
+                "${fileDirname}/publickeycipher.cpp",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}"
+                "${fileDirname}/RGR"
             ],
             "options": {
                 "cwd": "${fileDirname}"
@@ -31,9 +35,13 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${file}",
+                "${fileDirname}\\main.cpp",
+                "${fileDirname}\\sencipher.cpp",
+                "${fileDirname}\\hillcipher.cpp",
+                "${fileDirname}\\keygenerator.cpp",
+                "${fileDirname}\\publickeycipher.cpp",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "${fileDirname}\\RGR.exe"
             ],
             "options": {
                 "cwd": "${fileDirname}"
