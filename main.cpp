@@ -10,6 +10,28 @@
 using namespace std;
 using namespace SenCipher;
 
+enum class MainMenu{
+    Exit = 0,
+    Text = 1,
+    File = 2,
+    KeyGenerator = 3
+};
+
+enum class Algorithm{
+    Back = 0,
+    Affine = 1,
+    Hill = 2,
+    RSA = 3,
+    DiffieHellman = 4,
+    Shamir = 5,
+    ElGamal = 6
+};
+
+enum class Mode{
+    Back = 0,
+    Encrypt = 1,
+    Decrypt = 2
+};
 void waitForEnter(){
     cout << "\n====================================\n";
     cout << "Нажмите Enter для продолжения...";
@@ -58,19 +80,48 @@ vector<unsigned char> hexToBytes(const string& hexString){
 string bytesToString(const vector<unsigned char>& data){
     return string(data.begin(),data.end());
 }
-int chooseAlgorithm(){
+
+int showMenu(const string& title,
+             const vector<string>& items,
+             bool showBack = true){
+
+    cout << "\n====================================\n";
+    cout << title << '\n';
+    cout << "====================================\n\n";
+
+    int number = 1;
+
+    for (const auto& item : items){
+        cout << number++ << ". " << item << '\n';
+    }
+
+    if (showBack){
+        cout << "\n0. Назад\n";
+    }
+
+    cout << "\nВаш выбор: ";
+
     int choice;
-    cout << "\nВыберите алгоритм:\n\n";
-    cout << "1. Аффинный шифр\n";
-    cout << "2. Шифр Хилла\n";
-    cout << "3. RSA (в разработке)\n";
-    cout << "4. Диффи-Хеллман (в разработке)\n";
-    cout << "5. Шифр Шамира (в разработке)\n";
-    cout << "6. Шифр Эль-Гамаля (в разработке)\n";
-    cout << "\n0. Назад\n\n";
-    cout << "Ваш выбор: ";
     cin >> choice;
+
     return choice;
+}
+
+Algorithm chooseAlgorithm(){
+
+    return static_cast<Algorithm>(
+        showMenu(
+            "Выберите алгоритм",
+            {
+                "Аффинный шифр",
+                "Шифр Хилла",
+                "RSA (в разработке)",
+                "Диффи-Хеллман (в разработке)",
+                "Шифр Шамира (в разработке)",
+                "Шифр Эль-Гамаля (в разработке)"
+            }
+        )
+    );
 }
 void keyGeneratorMenu(){
     int choice;
@@ -144,20 +195,20 @@ vector<unsigned char> processHill(const vector<unsigned char>& data, bool encryp
     return decryptHill(data, key);
 }
 void fileMenu(){
-    int algorithm = chooseAlgorithm();
-    if (algorithm == 0){
+    Algorithm algorithm = chooseAlgorithm();
+    if (algorithm == Algorithm::Back){
         return;
     }
-    if (algorithm >= 3){
+    if (static_cast<int>(algorithm) >= static_cast<int>(Algorithm::RSA)){
         printError("Алгоритм пока не реализован.");
         waitForEnter();
         return;
     }
-    int mode;
-    cout << "\n1. Шифрование\n" << "2. Дешифрование\n" << "\n0. Назад\n\n";
-    cout << "Ваш выбор: ";
-    cin >> mode;
-    if (mode == 0){
+    Mode mode = static_cast<Mode>(showMenu("Выберите режим",{
+        "Шифрование",
+        "Дешифрование"
+        }));
+    if (mode == Mode::Back){
         return;
     }
     string inputFile;
@@ -165,14 +216,14 @@ void fileMenu(){
     cin >> inputFile;
     vector<unsigned char> data = readFile(inputFile);
     vector<unsigned char> result;
-    if (algorithm == 1){
-        result = processAffine(data,mode == 1);
+    if (algorithm == Algorithm::Affine){
+        result = processAffine(data, mode == Mode::Encrypt);
     }
     else{
-        result = processHill(data, mode == 1);
+        result = processHill(data, mode == Mode::Encrypt);
     }
     string outputFile;
-    if (mode == 1){
+    if (mode == Mode::Encrypt){
         outputFile = "encrypted_" + inputFile;
     }
     else{
@@ -183,27 +234,26 @@ void fileMenu(){
     waitForEnter();
 }
 void textMenu(){
-    int algorithm = chooseAlgorithm();
-    if (algorithm == 0){
+    Algorithm algorithm = chooseAlgorithm();
+    if (algorithm == Algorithm::Back){
         return;
     }
-    if (algorithm >= 3){
+    if (static_cast<int>(algorithm) >= static_cast<int>(Algorithm::RSA)){
         printError("Алгоритм пока не реализован.");
         waitForEnter();
         return;
     }
-    int mode;
-    cout << "\n1. Шифрование\n";
-    cout << "2. Дешифрование\n";
-    cout << "\n0. Назад\n\n";
-    cout << "Ваш выбор: ";
-    cin >> mode;
-    if (mode == 0){
+    Mode mode = static_cast<Mode>(
+    showMenu("Выберите режим",{
+            "Шифрование",
+            "Дешифрование"
+        }));
+    if (mode == Mode::Back){
         return;
     }
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     string text;
-    if (mode == 1){
+    if (mode == Mode::Encrypt){
         cout << "\nВведите текст:\n";
     }
     else{
@@ -211,21 +261,22 @@ void textMenu(){
     }
     getline(cin, text);
     vector<unsigned char> data;
-    if (mode == 1){
+    if (mode == Mode::Encrypt){
         data = stringToBytes(text);
     }
     else{
         data = hexToBytes(text);
     }
     vector<unsigned char> result;
-    if (algorithm == 1){
-        result = processAffine(data,mode == 1);
+    if (algorithm == Algorithm::Affine){
+        result = processAffine(data, mode == Mode::Encrypt
+        );
     }
     else{
-        result = processHill(data,mode == 1);
+        result = processHill(data,mode == Mode::Encrypt);
     }
 
-    if (mode == 1){
+    if (mode == Mode::Encrypt){
         cout << "\nРезультат (HEX):\n";
         for (unsigned char byte : result){
             printf("%02X", byte);
@@ -243,34 +294,33 @@ void textMenu(){
 int main(){
     try{
         while (true){
-            int choice;
-            cout << "\n=======================\n";
-            cout << "Система шифрования данных\n";
-            cout << "=========================\n\n";
-            cout << "1. Работа с текстом\n";
-            cout << "2. Работа с файлами\n";
-            cout << "3. Генератор ключей\n";
-            cout << "\n0. Выход\n\n";
-            cout << "Ваш выбор: ";
-            cin >> choice;
-
+            MainMenu choice = static_cast<MainMenu>(showMenu(
+            "Система шифрования данных",{
+                "Работа с текстом",
+                "Работа с файлами",
+                "Генератор ключей"
+            }));
             switch (choice){
-                case 1:
-                    textMenu();
-                    break;
-                case 2:
-                    fileMenu();
-                    break;
-                case 3:
-                    keyGeneratorMenu();
-                    break;
-                case 0:
-                    cout << "\nЗавершение программы...\n";
-                    return 0;
-                default:
-                    printError("Некорректный выбор.");
-                    waitForEnter();
-                    break;
+                case MainMenu::Text:
+                textMenu();
+                break;
+
+            case MainMenu::File:
+                fileMenu();
+                break;
+
+            case MainMenu::KeyGenerator:
+                keyGeneratorMenu();
+                break;
+
+            case MainMenu::Exit:
+                cout << "\nЗавершение программы...\n";
+                return 0;
+
+            default:
+                printError("Некорректный выбор.");
+                waitForEnter();
+                break;
             }
         }
     }
