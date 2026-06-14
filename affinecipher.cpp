@@ -1,4 +1,4 @@
-#include "sencipher.h"
+#include "affinecipher.h"
 using namespace std;
 
 namespace SenCipher{

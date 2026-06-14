@@ -1,13 +1,16 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <string>
 #include <limits>
 #include <cstdio>
-#include "sencipher.h"
+#include "affinecipher.h"
+#include "shamircipher.h"
+#include "elgamalcipher.h"
 #include "hillcipher.h"
+#include "gronsfeldcipher.h"
+#include "railfencecipher.h"
 #include "keygenerator.h"
-#include "publickeycipher.h"
+
 using namespace std;
 using namespace SenCipher;
 
@@ -22,10 +25,10 @@ enum class Algorithm{
     Back = 0,
     Affine = 1,
     Hill = 2,
-    RSA = 3,
-    DiffieHellman = 4,
-    Shamir = 5,
-    ElGamal = 6
+    Shamir = 3,
+    ElGamal = 4,
+    Gronsfeld = 5,
+    RailFence = 6
 };
 
 enum class Mode{
@@ -35,7 +38,7 @@ enum class Mode{
 };
 void waitForEnter(){
     cout << "\n====================================\n";
-    cout << "Нажмите Enter для продолжения...";
+    cout << "Нажмите Enter для продолжения.";
     cout << "\n====================================\n";
     cin.ignore(numeric_limits<streamsize>::max(),'\n');
     cin.get();
@@ -116,10 +119,10 @@ Algorithm chooseAlgorithm(){
             {
                 "Аффинный шифр",
                 "Шифр Хилла",
-                "RSA (в разработке)",
-                "Диффи-Хеллман (в разработке)",
                 "Шифр Шамира",
-                "Шифр Эль-Гамаля"
+                "Шифр Эль-Гамаля",
+                "Шифр Гронсфельда",
+                "Шифр Зигзаг"
             }
         )
     );
@@ -131,6 +134,8 @@ void keyGeneratorMenu(){
     cout << "2. Шифр Хилла\n";
     cout << "3. Шифр Шамира\n";
     cout << "4. Шифр Эль-Гамаля\n";
+    cout << "5. Шифр Гронсфельда\n";
+    cout << "6. Шифр Зигзаг\n";
     cout << "\n0. Назад\n";
     cout << "Ваш выбор: ";
     cin >> choice;
@@ -176,6 +181,14 @@ void keyGeneratorMenu(){
             cout << "\nКлючи Эль-Гамаля:\n";
             cout << "Открытый ключ: p = " << key.p << ", g = " << key.g << ", y = " << key.y << endl;
             cout << "Закрытый ключ: x = " << key.x << endl;
+            break;
+        }
+        case 5:{
+            cout << "\nКлюч Гронсфельда: " << generateGronsfeldKey(8) << endl;
+            break;
+        }
+        case 6:{
+            cout << "\nКоличество строк: " << generateRailFenceKey() << endl;
             break;
         }
         default:break;
@@ -265,17 +278,44 @@ vector<unsigned char> processElGamal(const vector<unsigned char>& data, bool enc
     return decryptElGamal(data, p, x);
 }
 
+vector<unsigned char> processGronsfeld(
+    const vector<unsigned char>& data,
+    bool encryptMode)
+{
+    string key;
+
+    cout << "\nВведите цифровой ключ: ";
+    cin >> key;
+
+    CipherGronsfeld cipher;
+
+    if (encryptMode){
+        return cipher.encrypt(data, key);
+    }
+
+    return cipher.decrypt(data, key);
+}
+
+vector<unsigned char> processRailFence(
+    const vector<unsigned char>& data,
+    bool encryptMode)
+{
+    string key;
+
+    cout << "\nВведите количество строк: ";
+    cin >> key;
+
+    CipherRailFence cipher;
+
+    if (encryptMode){
+        return cipher.encrypt(data, key);
+    }
+
+    return cipher.decrypt(data, key);
+}
 void fileMenu(){
     Algorithm algorithm = chooseAlgorithm();
     if (algorithm == Algorithm::Back){
-        return;
-    }
-
-    if (algorithm == Algorithm::RSA ||
-        algorithm == Algorithm::DiffieHellman)
-    {
-        printError("Алгоритм пока не реализован.");
-        waitForEnter();
         return;
     }
     Mode mode = static_cast<Mode>(showMenu("Выберите режим",{
@@ -301,7 +341,13 @@ void fileMenu(){
     }
     else if (algorithm == Algorithm::ElGamal){
         result = processElGamal(data, mode == Mode::Encrypt);
-    }   
+    }
+    else if (algorithm == Algorithm::Gronsfeld){
+        result = processGronsfeld(data, mode == Mode::Encrypt);
+    }  
+    else if (algorithm == Algorithm::RailFence){
+        result = processRailFence(data, mode == Mode::Encrypt);
+    }
     string outputFile;
     if (mode == Mode::Encrypt){
         outputFile = "encrypted_" + inputFile;
@@ -318,12 +364,6 @@ void textMenu(){
     if (algorithm == Algorithm::Back){
         return;
     }
-    if (algorithm == Algorithm::RSA ||
-        algorithm == Algorithm::DiffieHellman){
-            printError("Алгоритм пока не реализован.");
-            waitForEnter();
-            return;
-        }
     Mode mode = static_cast<Mode>(
     showMenu("Выберите режим",{
             "Шифрование",
@@ -361,6 +401,12 @@ void textMenu(){
     else if (algorithm == Algorithm::ElGamal){
         result = processElGamal(data, mode == Mode::Encrypt);
     }
+    else if (algorithm == Algorithm::Gronsfeld){
+        result = processGronsfeld(data, mode == Mode::Encrypt);
+    }
+    else if (algorithm == Algorithm::RailFence){
+        result = processRailFence(data, mode == Mode::Encrypt);
+    }
 
     if (mode == Mode::Encrypt){
         cout << "\nРезультат (HEX):\n";
@@ -386,37 +432,35 @@ int main(){
                 "Работа с файлами",
                 "Генератор ключей"
             }));
+
             switch (choice){
                 case MainMenu::Text:
-                textMenu();
-                break;
+                    textMenu();
+                    break;
 
-            case MainMenu::File:
-                fileMenu();
-                break;
+                case MainMenu::File:
+                    fileMenu();
+                    break;
 
-            case MainMenu::KeyGenerator:
-                keyGeneratorMenu();
-                break;
+                case MainMenu::KeyGenerator:
+                    keyGeneratorMenu();
+                    break;
 
-            case MainMenu::Exit:
-                cout << "\nЗавершение программы...\n";
-                return 0;
+                case MainMenu::Exit:
+                    cout << "\nЗавершение программы...\n";
+                    return 0;
 
-            default:
-                printError("Некорректный выбор.");
-                waitForEnter();
-                break;
+                default:
+                    printError("Некорректный выбор.");
+                    waitForEnter();
+                    break;
             }
         }
     }
-    catch (const exception& ex){
-        printError(ex.what());
+    catch (const exception& e){
+        printError(e.what());
         waitForEnter();
     }
-    catch (...){
-        printError("Неизвестная ошибка.");
-        waitForEnter();
-    }
+
     return 0;
 }

@@ -9,5 +9,25 @@ namespace SenCipher{
     };
     AffineKey generateAffineKey();
     vector<vector<int>> generateHillKey();
+    struct ShamirUserKey{
+        int c;
+        int d;
+    };
+    struct ShamirKeys{
+        int p;
+        ShamirUserKey alice;
+        ShamirUserKey bob;
+    };
+    ShamirKeys generateShamirKeys(int p);
+    struct ElGamalKey
+        {
+    int p;
+    int g;
+    int x;
+    int y;
+    };
+    ElGamalKey generateElGamalKey(int p, int g);
+    string generateGronsfeldKey(int length);
+    int generateRailFenceKey();
 }
 #endif
