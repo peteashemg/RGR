@@ -7,6 +7,7 @@
 #include "sencipher.h"
 #include "hillcipher.h"
 #include "keygenerator.h"
+#include "publickeycipher.h"
 using namespace std;
 using namespace SenCipher;
 
@@ -117,8 +118,8 @@ Algorithm chooseAlgorithm(){
                 "Шифр Хилла",
                 "RSA (в разработке)",
                 "Диффи-Хеллман (в разработке)",
-                "Шифр Шамира (в разработке)",
-                "Шифр Эль-Гамаля (в разработке)"
+                "Шифр Шамира",
+                "Шифр Эль-Гамаля"
             }
         )
     );
@@ -128,6 +129,8 @@ void keyGeneratorMenu(){
     cout << "\nГенератор ключей\n\n";
     cout << "1. Аффинный шифр\n";
     cout << "2. Шифр Хилла\n";
+    cout << "3. Шифр Шамира\n";
+    cout << "4. Шифр Эль-Гамаля\n";
     cout << "\n0. Назад\n";
     cout << "Ваш выбор: ";
     cin >> choice;
@@ -150,6 +153,29 @@ void keyGeneratorMenu(){
                 }
                 cout << endl;
             }
+            break;
+        }
+        case 3:{
+            int p;
+            cout << "\nВведите простое p больше 255 (например 257): ";
+            cin >> p;
+            ShamirKeys keys = generateShamirKeys(p);
+            cout << "\nКлючи Шамира:\n";
+            cout << "p = " << keys.p << endl;
+            cout << "Алиса: cA = " << keys.alice.c << ", dA = " << keys.alice.d << endl;
+            cout << "Боб:   cB = " << keys.bob.c << ", dB = " << keys.bob.d << endl;
+            break;
+        }
+        case 4:{
+            int p; int g;
+            cout << "\nВведите простое p больше 255 (например 257): ";
+            cin >> p;
+            cout << "Введите g от 2 до p - 1 (например 3): ";
+            cin >> g;
+            ElGamalKey key = generateElGamalKey(p, g);
+            cout << "\nКлючи Эль-Гамаля:\n";
+            cout << "Открытый ключ: p = " << key.p << ", g = " << key.g << ", y = " << key.y << endl;
+            cout << "Закрытый ключ: x = " << key.x << endl;
             break;
         }
         default:break;
@@ -194,12 +220,60 @@ vector<unsigned char> processHill(const vector<unsigned char>& data, bool encryp
     }
     return decryptHill(data, key);
 }
+
+vector<unsigned char> processShamir(const vector<unsigned char>& data, bool encryptMode){
+    int p;
+    cout << "\nВведите простое p больше 255: ";
+    cin >> p;
+
+    if (encryptMode){
+        int ca; int da; int cb;
+        cout << "Введите ключ Алисы cA: ";
+        cin >> ca;
+        cout << "Введите обратный ключ Алисы dA: ";
+        cin >> da;
+        cout << "Введите ключ Боба cB: ";
+        cin >> cb;
+
+        return encryptShamir(data, p, ca, da, cb);
+    }
+
+    int db;
+    cout << "Введите обратный ключ Боба dB: ";
+    cin >> db;
+    return decryptShamir(data, p, db);
+}
+
+vector<unsigned char> processElGamal(const vector<unsigned char>& data, bool encryptMode){
+    int p;
+    cout << "\nВведите простое p больше 255: ";
+    cin >> p;
+
+    if (encryptMode){
+        int g; int y;
+        cout << "Введите основание g: ";
+        cin >> g;
+        cout << "Введите открытый ключ y: ";
+        cin >> y;
+
+        return encryptElGamal(data, p, g, y);
+    }
+
+    int x;
+    cout << "Введите закрытый ключ x: ";
+    cin >> x;
+    return decryptElGamal(data, p, x);
+}
+
 void fileMenu(){
     Algorithm algorithm = chooseAlgorithm();
     if (algorithm == Algorithm::Back){
         return;
     }
-    if (static_cast<int>(algorithm) >= static_cast<int>(Algorithm::RSA)){
+
+    if (algorithm == Algorithm::RSA ||
+        algorithm == Algorithm::DiffieHellman)
+    {
         printError("Алгоритм пока не реализован.");
         waitForEnter();
         return;
@@ -217,11 +291,17 @@ void fileMenu(){
     vector<unsigned char> data = readFile(inputFile);
     vector<unsigned char> result;
     if (algorithm == Algorithm::Affine){
-        result = processAffine(data, mode == Mode::Encrypt);
+    result = processAffine(data, mode == Mode::Encrypt);
     }
-    else{
+    else if (algorithm == Algorithm::Hill){
         result = processHill(data, mode == Mode::Encrypt);
     }
+    else if (algorithm == Algorithm::Shamir){
+        result = processShamir(data, mode == Mode::Encrypt);
+    }
+    else if (algorithm == Algorithm::ElGamal){
+        result = processElGamal(data, mode == Mode::Encrypt);
+    }   
     string outputFile;
     if (mode == Mode::Encrypt){
         outputFile = "encrypted_" + inputFile;
@@ -238,11 +318,12 @@ void textMenu(){
     if (algorithm == Algorithm::Back){
         return;
     }
-    if (static_cast<int>(algorithm) >= static_cast<int>(Algorithm::RSA)){
-        printError("Алгоритм пока не реализован.");
-        waitForEnter();
-        return;
-    }
+    if (algorithm == Algorithm::RSA ||
+        algorithm == Algorithm::DiffieHellman){
+            printError("Алгоритм пока не реализован.");
+            waitForEnter();
+            return;
+        }
     Mode mode = static_cast<Mode>(
     showMenu("Выберите режим",{
             "Шифрование",
@@ -269,11 +350,16 @@ void textMenu(){
     }
     vector<unsigned char> result;
     if (algorithm == Algorithm::Affine){
-        result = processAffine(data, mode == Mode::Encrypt
-        );
+        result = processAffine(data, mode == Mode::Encrypt);
     }
-    else{
-        result = processHill(data,mode == Mode::Encrypt);
+    else if (algorithm == Algorithm::Hill){
+        result = processHill(data, mode == Mode::Encrypt);
+    }
+    else if (algorithm == Algorithm::Shamir){
+        result = processShamir(data, mode == Mode::Encrypt);
+    }
+    else if (algorithm == Algorithm::ElGamal){
+        result = processElGamal(data, mode == Mode::Encrypt);
     }
 
     if (mode == Mode::Encrypt){
