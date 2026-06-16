@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #define NOMINMAX
 #include <iostream>
 #include <fstream>
@@ -10,6 +11,17 @@
 #undef max
 #undef min
 
+=======
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <limits>
+#include <cstdio>
+#include "sencipher.h"
+#include "hillcipher.h"
+#include "keygenerator.h"
+>>>>>>> 93828e04832088829754561e1cce934810836682
 using namespace std;
 using namespace SenCipher;
 
@@ -24,10 +36,17 @@ enum class Algorithm{
     Back = 0,
     Affine = 1,
     Hill = 2,
+<<<<<<< HEAD
     Shamir = 3,
     ElGamal = 4,
     Gronsfeld = 5,
     RailFence = 6
+=======
+    RSA = 3,
+    DiffieHellman = 4,
+    Shamir = 5,
+    ElGamal = 6
+>>>>>>> 93828e04832088829754561e1cce934810836682
 };
 
 enum class Mode{
@@ -37,7 +56,11 @@ enum class Mode{
 };
 void waitForEnter(){
     cout << "\n====================================\n";
+<<<<<<< HEAD
     cout << "Нажмите Enter для продолжения.";
+=======
+    cout << "Нажмите Enter для продолжения...";
+>>>>>>> 93828e04832088829754561e1cce934810836682
     cout << "\n====================================\n";
     cin.ignore(numeric_limits<streamsize>::max(),'\n');
     cin.get();
@@ -118,10 +141,17 @@ Algorithm chooseAlgorithm(){
             {
                 "Аффинный шифр",
                 "Шифр Хилла",
+<<<<<<< HEAD
                 "Шифр Шамира",
                 "Шифр Эль-Гамаля",
                 "Шифр Гронсфельда",
                 "Шифр Зигзаг"
+=======
+                "RSA (в разработке)",
+                "Диффи-Хеллман (в разработке)",
+                "Шифр Шамира (в разработке)",
+                "Шифр Эль-Гамаля (в разработке)"
+>>>>>>> 93828e04832088829754561e1cce934810836682
             }
         )
     );
@@ -131,10 +161,13 @@ void keyGeneratorMenu(){
     cout << "\nГенератор ключей\n\n";
     cout << "1. Аффинный шифр\n";
     cout << "2. Шифр Хилла\n";
+<<<<<<< HEAD
     cout << "3. Шифр Шамира\n";
     cout << "4. Шифр Эль-Гамаля\n";
     cout << "5. Шифр Гронсфельда\n";
     cout << "6. Шифр Зигзаг\n";
+=======
+>>>>>>> 93828e04832088829754561e1cce934810836682
     cout << "\n0. Назад\n";
     cout << "Ваш выбор: ";
     cin >> choice;
@@ -159,6 +192,7 @@ void keyGeneratorMenu(){
             }
             break;
         }
+<<<<<<< HEAD
         case 3:{
             int p;
             cout << "\nВведите простое p больше 255 (например 257): ";
@@ -190,11 +224,14 @@ void keyGeneratorMenu(){
             cout << "\nКоличество строк: " << generateRailFenceKey() << endl;
             break;
         }
+=======
+>>>>>>> 93828e04832088829754561e1cce934810836682
         default:break;
     }
 
     waitForEnter();
 }
+<<<<<<< HEAD
 vector<unsigned char> processDLL(const string& dllName, const vector<unsigned char>& data, bool encryptMode, const string& key){
     PluginLoader loader;
     ReleaseCipherFunc releaseFunc;
@@ -215,10 +252,15 @@ vector<unsigned char> processDLL(const string& dllName, const vector<unsigned ch
 }
 vector<unsigned char> processAffine(const vector<unsigned char>& data, bool encryptMode){
     int a, b;
+=======
+vector<unsigned char> processAffine(const vector<unsigned char>& data, bool encryptMode){
+    int a;int b;
+>>>>>>> 93828e04832088829754561e1cce934810836682
     cout << "\nВведите ключ a: ";
     cin >> a;
     cout << "Введите ключ b: ";
     cin >> b;
+<<<<<<< HEAD
     string key = to_string(a) + " " + to_string(b);
 
     return processDLL("AffineCipher.dll", data, encryptMode, key);
@@ -226,6 +268,19 @@ vector<unsigned char> processAffine(const vector<unsigned char>& data, bool encr
 vector<unsigned char> processHill(
     const vector<unsigned char>& data,
     bool encryptMode){
+=======
+    if (gcd(a, 256) != 1){
+        throw runtime_error("Ключ a должен быть взаимно простым с 256.");
+    }
+
+    if (encryptMode){
+        return encryptAffine(data,a, b);
+    }
+
+    return decryptAffine(data, a, b);
+}
+vector<unsigned char> processHill(const vector<unsigned char>& data, bool encryptMode){
+>>>>>>> 93828e04832088829754561e1cce934810836682
     vector<vector<int>> key(2, vector<int>(2));
     cout << "\nВведите матрицу 2x2:\n";
     for (auto& row : key){
@@ -233,6 +288,7 @@ vector<unsigned char> processHill(
             cin >> value;
         }
     }
+<<<<<<< HEAD
     string keyString =
         to_string(key[0][0]) + " " +
         to_string(key[0][1]) + " " +
@@ -336,12 +392,34 @@ vector<unsigned char> processRailFence(
         encryptMode,
         key
     );
+=======
+    int determinant = key[0][0] * key[1][1] - key[0][1] * key[1][0];
+    determinant %= 256;
+    if (determinant < 0){
+        determinant += 256;
+    }
+    if (gcd(determinant, 256) != 1){
+        throw runtime_error("Матрица не имеет обратной по mod 256.");
+    }
+    if (encryptMode){
+        return encryptHill(data, key);
+    }
+    return decryptHill(data, key);
+>>>>>>> 93828e04832088829754561e1cce934810836682
 }
 void fileMenu(){
     Algorithm algorithm = chooseAlgorithm();
     if (algorithm == Algorithm::Back){
         return;
     }
+<<<<<<< HEAD
+=======
+    if (static_cast<int>(algorithm) >= static_cast<int>(Algorithm::RSA)){
+        printError("Алгоритм пока не реализован.");
+        waitForEnter();
+        return;
+    }
+>>>>>>> 93828e04832088829754561e1cce934810836682
     Mode mode = static_cast<Mode>(showMenu("Выберите режим",{
         "Шифрование",
         "Дешифрование"
@@ -357,6 +435,7 @@ void fileMenu(){
     if (algorithm == Algorithm::Affine){
         result = processAffine(data, mode == Mode::Encrypt);
     }
+<<<<<<< HEAD
     else if (algorithm == Algorithm::Hill){
         result = processHill(data, mode == Mode::Encrypt);
     }
@@ -372,6 +451,11 @@ void fileMenu(){
     else if (algorithm == Algorithm::RailFence){
         result = processRailFence(data, mode == Mode::Encrypt);
     }
+=======
+    else{
+        result = processHill(data, mode == Mode::Encrypt);
+    }
+>>>>>>> 93828e04832088829754561e1cce934810836682
     string outputFile;
     if (mode == Mode::Encrypt){
         outputFile = "encrypted_" + inputFile;
@@ -388,6 +472,14 @@ void textMenu(){
     if (algorithm == Algorithm::Back){
         return;
     }
+<<<<<<< HEAD
+=======
+    if (static_cast<int>(algorithm) >= static_cast<int>(Algorithm::RSA)){
+        printError("Алгоритм пока не реализован.");
+        waitForEnter();
+        return;
+    }
+>>>>>>> 93828e04832088829754561e1cce934810836682
     Mode mode = static_cast<Mode>(
     showMenu("Выберите режим",{
             "Шифрование",
@@ -396,7 +488,11 @@ void textMenu(){
     if (mode == Mode::Back){
         return;
     }
+<<<<<<< HEAD
     cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+=======
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+>>>>>>> 93828e04832088829754561e1cce934810836682
     string text;
     if (mode == Mode::Encrypt){
         cout << "\nВведите текст:\n";
@@ -414,6 +510,7 @@ void textMenu(){
     }
     vector<unsigned char> result;
     if (algorithm == Algorithm::Affine){
+<<<<<<< HEAD
         result = processAffine(data, mode == Mode::Encrypt);
     }
     else if (algorithm == Algorithm::Hill){
@@ -430,6 +527,13 @@ void textMenu(){
     }
     else if (algorithm == Algorithm::RailFence){
         result = processRailFence(data, mode == Mode::Encrypt);
+=======
+        result = processAffine(data, mode == Mode::Encrypt
+        );
+    }
+    else{
+        result = processHill(data,mode == Mode::Encrypt);
+>>>>>>> 93828e04832088829754561e1cce934810836682
     }
 
     if (mode == Mode::Encrypt){
@@ -456,6 +560,7 @@ int main(){
                 "Работа с файлами",
                 "Генератор ключей"
             }));
+<<<<<<< HEAD
 
             switch (choice){
                 case MainMenu::Text:
@@ -486,5 +591,39 @@ int main(){
         waitForEnter();
     }
 
+=======
+            switch (choice){
+                case MainMenu::Text:
+                textMenu();
+                break;
+
+            case MainMenu::File:
+                fileMenu();
+                break;
+
+            case MainMenu::KeyGenerator:
+                keyGeneratorMenu();
+                break;
+
+            case MainMenu::Exit:
+                cout << "\nЗавершение программы...\n";
+                return 0;
+
+            default:
+                printError("Некорректный выбор.");
+                waitForEnter();
+                break;
+            }
+        }
+    }
+    catch (const exception& ex){
+        printError(ex.what());
+        waitForEnter();
+    }
+    catch (...){
+        printError("Неизвестная ошибка.");
+        waitForEnter();
+    }
+>>>>>>> 93828e04832088829754561e1cce934810836682
     return 0;
 }

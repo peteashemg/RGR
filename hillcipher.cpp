@@ -1,7 +1,11 @@
 #include "hillcipher.h"
+<<<<<<< HEAD
 #include "affinecipher.h"
 #include <sstream>
 #include "mathutils.h"
+=======
+#include "sencipher.h"
+>>>>>>> 93828e04832088829754561e1cce934810836682
 using namespace std;
 
 namespace SenCipher{
@@ -82,6 +86,7 @@ namespace SenCipher{
         }
         return result;
     }
+<<<<<<< HEAD
 }
 
 vector<unsigned char> HillCipher::encrypt(
@@ -124,4 +129,6 @@ CipherAPI* createCipher()
 void releaseCipher(CipherAPI* cipher)
 {
     delete cipher;
+=======
+>>>>>>> 93828e04832088829754561e1cce934810836682
 }

@@ -1,4 +1,5 @@
 #include "keygenerator.h"
+<<<<<<< HEAD
 #include "affinecipher.h"
 #include <random>
 #include <stdexcept>
@@ -53,6 +54,12 @@ int modPow(int base,int power,int mod){
 
     return result;
 }
+=======
+#include "sencipher.h"
+#include <random>
+using namespace std;
+
+>>>>>>> 93828e04832088829754561e1cce934810836682
 namespace SenCipher{
     AffineKey generateAffineKey(){
         random_device rd;
@@ -91,6 +98,7 @@ namespace SenCipher{
             }
         }
     }
+<<<<<<< HEAD
     ShamirKeys generateShamirKeys(int p){
         checkPrimeModule(p);
         random_device rd;
@@ -153,4 +161,6 @@ namespace SenCipher{
         uniform_int_distribution<int> dist(2,10);
         return dist(gen);
     }
+=======
+>>>>>>> 93828e04832088829754561e1cce934810836682
 }
