@@ -5,4 +5,9 @@ all:
 	cl /EHsc /LD elgamalcipher.cpp mathutils.cpp /Fe:../bin/elgamalcipher.dll
 	cl /EHsc /LD gronsfeldcipher.cpp /Fe:../bin/gronsfeldcipher.dll
 	cl /EHsc /LD railfencecipher.cpp /Fe:../bin/railfencecipher.dll
-	cl /EHsc main.cpp pluginloader.cpp keygenerator.cpp /Fe:../bin/main.exe
+	cl /EHsc main.cpp pluginloader.cpp keygenerator.cpp mathutils.cpp /Fe:../bin/main.exe
+	-del *.obj
+	-del *.exp
+	-del *.lib
+	-del ..\bin\*.exp
+	-del ..\bin\*.lib
