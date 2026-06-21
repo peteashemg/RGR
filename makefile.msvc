@@ -1,0 +1,8 @@
+all:
+	cl /EHsc /LD affinecipher.cpp /Fe:../bin/affinecipher.dll
+	cl /EHsc /LD hillcipher.cpp mathutils.cpp /Fe:../bin/hillcipher.dll
+	cl /EHsc /LD shamircipher.cpp mathutils.cpp /Fe:../bin/shamircipher.dll
+	cl /EHsc /LD elgamalcipher.cpp mathutils.cpp /Fe:../bin/elgamalcipher.dll
+	cl /EHsc /LD gronsfeldcipher.cpp /Fe:../bin/gronsfeldcipher.dll
+	cl /EHsc /LD railfencecipher.cpp /Fe:../bin/railfencecipher.dll
+	cl /EHsc main.cpp pluginloader.cpp keygenerator.cpp /Fe:../bin/main.exe

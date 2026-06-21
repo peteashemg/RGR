@@ -5,8 +5,14 @@
 #include <limits>
 #include <cstdio>
 #include <numeric>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "pluginloader.h"
 #include "keygenerator.h"
+
 #undef max
 #undef min
 
@@ -127,7 +133,7 @@ Algorithm chooseAlgorithm(){
     );
 }
 void keyGeneratorMenu(){
-    int choice;
+    Algorithm choice;
     cout << "\nГенератор ключей\n\n";
     cout << "1. Аффинный шифр\n";
     cout << "2. Шифр Хилла\n";
@@ -137,30 +143,33 @@ void keyGeneratorMenu(){
     cout << "6. Шифр Зигзаг\n";
     cout << "\n0. Назад\n";
     cout << "Ваш выбор: ";
-    cin >> choice;
+    int temp;
+    cin >> temp;
+    choice = static_cast<Algorithm>(temp);
     
     switch (choice){
-        case 1:{
-            AffineKey key = generateAffineKey();
+    case Algorithm::Affine:{
+        AffineKey key = generateAffineKey();
             cout << "\nСгенерированный ключ:\n";
             cout << "a = " << key.a << endl;
             cout << "b = " << key.b << endl;
-            break;
-        }
+        break;
+    }
 
-        case 2:{
-            auto key = generateHillKey();
-            cout << "\nМатрица:\n";
+    case Algorithm::Hill:{
+        auto key = generateHillKey();
+        cout << "\nМатрица:\n";
             for (const auto& row : key){
                 for (int value : row){
                     cout << value << '\t';
                 }
                 cout << endl;
             }
-            break;
-        }
-        case 3:{
-            int p;
+        break;
+    }
+
+    case Algorithm::Shamir:{
+        int p;
             cout << "\nВведите простое p больше 255 (например 257): ";
             cin >> p;
             ShamirKeys keys = generateShamirKeys(p);
@@ -168,10 +177,11 @@ void keyGeneratorMenu(){
             cout << "p = " << keys.p << endl;
             cout << "Алиса: cA = " << keys.alice.c << ", dA = " << keys.alice.d << endl;
             cout << "Боб:   cB = " << keys.bob.c << ", dB = " << keys.bob.d << endl;
-            break;
-        }
-        case 4:{
-            int p; int g;
+        break;
+    }
+
+    case Algorithm::ElGamal:{
+        int p; int g;
             cout << "\nВведите простое p больше 255 (например 257): ";
             cin >> p;
             cout << "Введите g от 2 до p - 1 (например 3): ";
@@ -180,18 +190,26 @@ void keyGeneratorMenu(){
             cout << "\nКлючи Эль-Гамаля:\n";
             cout << "Открытый ключ: p = " << key.p << ", g = " << key.g << ", y = " << key.y << endl;
             cout << "Закрытый ключ: x = " << key.x << endl;
-            break;
-        }
-        case 5:{
-            cout << "\nКлюч Гронсфельда: " << generateGronsfeldKey(8) << endl;
-            break;
-        }
-        case 6:{
-            cout << "\nКоличество строк: " << generateRailFenceKey() << endl;
-            break;
-        }
-        default:break;
+        break;
     }
+
+    case Algorithm::Gronsfeld:{
+        cout << "\nКлюч Гронсфельда: " << generateGronsfeldKey(8) << endl;
+        break;
+    }
+
+    case Algorithm::RailFence:{
+        cout << "\nКоличество строк: " << generateRailFenceKey() << endl;
+        break;
+    }
+
+    case Algorithm::Back:
+        return;
+
+    default:
+        printError("Некорректный выбор.");
+        break;
+}
 
     waitForEnter();
 }
@@ -448,10 +466,16 @@ void textMenu(){
 }
 
 int main(){
+
+    #ifdef _WIN32
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
+    #endif
+    
     try{
         while (true){
             MainMenu choice = static_cast<MainMenu>(showMenu(
-            "Система шифрования данных",{
+            "Система шифрования данных Sencipher",{
                 "Работа с текстом",
                 "Работа с файлами",
                 "Генератор ключей"
@@ -471,7 +495,7 @@ int main(){
                     break;
 
                 case MainMenu::Exit:
-                    cout << "\nЗавершение программы...\n";
+                    cout << "\nЗавершение программы.\n";
                     return 0;
 
                 default:
